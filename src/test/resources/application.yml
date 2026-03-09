@@ -1,0 +1,17 @@
+# Test-specific configuration that overrides the main application.yml.
+
+github:
+  api:
+    base-url: http://localhost:9999
+    token: test-token-not-real
+    org: test-org
+    per-page: 100
+    max-concurrent-calls: 5
+  cache:
+    ttl-minutes: 1
+    max-size: 10
+
+logging:
+  level:
+    root: WARN
+    com.github.accessreport: DEBUG

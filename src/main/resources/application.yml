@@ -1,0 +1,61 @@
+server:
+  port: 8080
+  tomcat:
+    connection-timeout: 30000 # need to increase as the no of repos grows
+
+spring:
+  application:
+    name: github-access-report
+
+  # Auto-load .env file for local development.
+  config:
+    import: optional:file:.env[.properties]
+
+  # Jackson configuration: consistent date serialization across the API
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    time-zone: UTC
+
+  # Actuator: expose health and info endpoints for Kubernetes probes
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: health,info,metrics
+    endpoint:
+      health:
+        show-details: when-authorized
+
+# GitHub API configuration.
+github:
+  api:
+    base-url: https://api.github.com
+    token: ${GITHUB_TOKEN}
+    org: ${GITHUB_ORG:}
+    per-page: 100
+    max-concurrent-calls: 10
+
+  cache:
+    ttl-minutes: 10
+    max-size: 50
+
+# SpringDoc / Swagger UI configuration
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: alpha
+    tags-sorter: alpha
+    display-request-duration: true
+
+# Logging: verbose for our code, quieter for framework internals
+logging:
+  level:
+    root: WARN
+    com.github.accessreport: DEBUG
+    org.springframework.web.reactive.function.client: WARN
+    reactor.netty: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"

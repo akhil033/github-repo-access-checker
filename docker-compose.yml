@@ -1,0 +1,48 @@
+version: "3.9"
+#   1. Copy .env.example to .env and fill in your real GITHUB_TOKEN value.
+#   2. Run: docker-compose up --build
+#   3. Access the API at: http://localhost:8080/api/v1/access-report?org=your-org
+#   4. View Swagger UI at: http://localhost:8080/swagger-ui.html
+
+services:
+
+  github-access-report:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+
+    image: github-access-report:latest
+
+    container_name: github-access-report
+
+    ports:
+      # Map host port 8080 to container port 8080
+      - "8080:8080"
+
+    env_file:
+      - .env
+
+    environment:
+      # These are documented here; actual values come from .env
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - GITHUB_ORG=${GITHUB_ORG:-}
+      - LOGGING_LEVEL_COM_GITHUB_ACCESSREPORT=${LOG_LEVEL:-INFO}
+      - JAVA_OPTS=-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0
+    restart: unless-stopped
+
+    # Health check
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/v1/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          memory: 256M

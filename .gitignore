@@ -1,0 +1,71 @@
+# Compiled output
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+
+# Maven
+.mvn/wrapper/maven-wrapper.jar
+
+# Environment and secrets - NEVER commit these
+.env
+*.env
+*.secret
+
+# IDE files
+.idea/
+*.iml
+*.iws
+*.ipr
+.classpath
+.project
+.settings/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.vscode/settings.json
+.vscode/launch.json
+
+# IntelliJ IDEA
+*.iml
+*.iws
+.idea/
+
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# NetBeans
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Log files
+*.log
+logs/
+
+# Docker
+docker-compose.override.yml
+
+# OS temporary files
+*~
+\#*\#
+.\#*
