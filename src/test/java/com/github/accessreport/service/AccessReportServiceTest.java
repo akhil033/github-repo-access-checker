@@ -36,7 +36,7 @@ class AccessReportServiceTest {
 
     @BeforeEach
     void setUp() {
-        reportService = new AccessReportService(repoService, collaboratorService, cacheManager, 5);
+        reportService = new AccessReportService(repoService, collaboratorService, cacheManager, 5, 60);
     }
 
     @Test

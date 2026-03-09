@@ -35,6 +35,7 @@ github:
     org: ${GITHUB_ORG:}
     per-page: 100
     max-concurrent-calls: 10
+    report-timeout-seconds: 300
 
   cache:
     ttl-minutes: 10

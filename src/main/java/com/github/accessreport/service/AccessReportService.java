@@ -30,6 +30,7 @@ public class AccessReportService {
     private final GithubCollaboratorService collaboratorService;
     private final CacheManager cacheManager;
     private final int maxConcurrentCalls;
+    private final int reportTimeoutSeconds;
 
     // Cache name must match what is configured in CacheConfig
     private static final String CACHE_NAME = "accessReports";
@@ -37,11 +38,13 @@ public class AccessReportService {
     public AccessReportService(GithubRepoService repoService,
                                GithubCollaboratorService collaboratorService,
                                CacheManager cacheManager,
-                               @Value("${github.api.max-concurrent-calls:10}") int maxConcurrentCalls) {
+                               @Value("${github.api.max-concurrent-calls:10}") int maxConcurrentCalls,
+                               @Value("${github.api.report-timeout-seconds:300}") int reportTimeoutSeconds) {
         this.repoService = repoService;
         this.collaboratorService = collaboratorService;
         this.cacheManager = cacheManager;
         this.maxConcurrentCalls = maxConcurrentCalls;
+        this.reportTimeoutSeconds = reportTimeoutSeconds;
     }
 
     // Main method to generate the access report for a given organization. The result is cached by Spring's caching abstraction.
@@ -61,7 +64,7 @@ public class AccessReportService {
         List<RepoAccess> repoAccessList = Flux.fromIterable(repos)
                 .flatMap(repo -> collaboratorService.fetchCollaboratorsForRepo(repo), maxConcurrentCalls)
                 .collectList()
-                .block(Duration.ofSeconds(60)); // 60-second ceiling; prevents indefinite hangs
+                .block(Duration.ofSeconds(reportTimeoutSeconds)); // configurable ceiling; default 300s for large orgs
 
         if (repoAccessList == null) {
             repoAccessList = List.of();

@@ -157,6 +157,21 @@ http://localhost:8080/swagger-ui.html
 
 ## Assumptions & Design Decisions
 
+### Scale: 100+ repositories, 1000+ users
+
+The service is designed to handle organizations of this size without manual tuning:
+
+| Mechanism | How it handles scale |
+|-----------|----------------------|
+| **Pagination** | `Flux.expand()` follows `rel="next"` Link headers automatically, no hard limit on repo or user count |
+| **Parallel collaborator fetch** | `Flux.flatMap(concurrency=10)` fetches 10 repos simultaneously; 100 repos = ~10 rounds, not 100 sequential calls |
+| **Per-page=100** | GitHub's maximum page size, minimizing total API call count |
+| **Caching** | After the first fetch, all subsequent calls within the 10-minute TTL window are O(1) from Caffeine, zero GitHub API calls |
+| **Configurable timeout** | `github.api.report-timeout-seconds` defaults to 300s; a 1000-repo org with 10-concurrent fetches at ~0.5s each needs ~50s; 300s provides ample headroom |
+| **Rate limit handling** | 429/403 responses raise a typed `RateLimitExceededException` with the `Retry-After` header surfaced in the error body; remaining-limit warnings are logged when GitHub reports < 10 calls left |
+
+Trade-off acknowledged: repository page fetching is inherently sequential because GitHub's pagination model requires page N's response to obtain page N+1's URL. For a 1000-repo org, that is 10 pages (at per-page=100), a few sequential round-trips before parallel collaborator fetch begins.
+
 ### Parallelism for collaborator fetching
 Fetching collaborators sequentially for every repo would be very slow. The service uses `Flux.flatMap` with a bounded concurrency limit (default: 10 concurrent calls) to fetch collaborators for all repositories in parallel while staying within GitHub's secondary rate limits.
 
@@ -174,6 +189,15 @@ GitHub caps all list endpoints at 100 items per page and uses RFC 5988 `Link` he
 
 ### `.env` file loading
 Spring Boot does not natively read `.env` files. The service uses `spring.config.import: optional:file:.env[.properties]` in `application.yml` to auto-load the `.env` file when running locally. If you're using .env over real environment variables then this helps in running it without any trouble, or else `.env` is silently ignored.
+
+---
+
+## References
+
+- [Using pagination in the GitHub REST API](https://docs.github.com/en/rest/using-the-rest-api/using-pagination-in-the-rest-api)
+- [Rate limits for the GitHub REST API](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api)
+- [GitHub Collaborators API affiliation behaviour (community discussion)](https://github.com/orgs/community/discussions/77255)
+- [Notes on Reactive Programming Spring WebFlux / WebClient](https://spring.io/blog/2016/07/20/notes-on-reactive-programming-part-iii-a-simple-http-server-application/)
 
 ---
 
